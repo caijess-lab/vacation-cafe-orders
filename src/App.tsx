@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { Check, Clock3, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import type { ChangeEvent, PointerEvent as ReactPointerEvent } from 'react';
+import { Check, Clock3, Download, Pencil, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react';
 import { DEFAULT_DATA, INITIAL_RESTAURANT_DATA, RESTAURANT_STORAGE_KEY, STORAGE_KEY } from './constants';
 import type { AppData, MenuItem, RestaurantData, TableOrderItem } from './types';
 import { useLocalStorage } from './hooks/useLocaleStorage';
@@ -15,6 +15,45 @@ import CategoryManagement from './components/CategoryManagement';
 import FooterNav from './components/FooterNav';
 
 type PageKey = 'home' | 'categories' | 'dishes' | 'tables';
+
+interface CatalogBackup {
+  version: 1;
+  categories: string[];
+  items: MenuItem[];
+}
+
+function isCatalogBackup(value: unknown): value is CatalogBackup {
+  if (typeof value !== 'object' || value === null) return false;
+  const backup = value as Partial<CatalogBackup>;
+  if (
+    backup.version !== 1 ||
+    !Array.isArray(backup.categories) ||
+    !Array.isArray(backup.items) ||
+    !backup.categories.every((category) => typeof category === 'string' && category.trim() !== '')
+  ) {
+    return false;
+  }
+
+  const categoryNames = new Set(backup.categories.map((category) => category.toLowerCase()));
+  const itemIds = new Set<string>();
+  return backup.items.every((item) => {
+    if (
+      typeof item !== 'object' ||
+      item === null ||
+      typeof item.id !== 'string' ||
+      item.id.trim() === '' ||
+      typeof item.name !== 'string' ||
+      item.name.trim() === '' ||
+      typeof item.category !== 'string' ||
+      !categoryNames.has(item.category.toLowerCase()) ||
+      itemIds.has(item.id)
+    ) {
+      return false;
+    }
+    itemIds.add(item.id);
+    return true;
+  });
+}
 
 export default function App() {
   const [data, setData] = useLocalStorage<AppData>(STORAGE_KEY, DEFAULT_DATA);
@@ -34,6 +73,8 @@ export default function App() {
   const [isTableFormOpen, setIsTableFormOpen] = useState(false);
   const [tableBeingEdited, setTableBeingEdited] = useState<string | null>(null);
   const [orderTableEditor, setOrderTableEditor] = useState<string | null>(null);
+  const [backupMessage, setBackupMessage] = useState('');
+  const backupInputRef = useRef<HTMLInputElement>(null);
 
   const itemOrderSummaries = useMemo(() => {
     const summaries: Record<string, { quantity: number; readyQuantity: number }> = {};
@@ -58,6 +99,39 @@ export default function App() {
     ),
     [restaurant.orders],
   );
+
+  const exportCatalog = () => {
+    const backup: CatalogBackup = { version: 1, categories, items };
+    const file = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `vacation-cafe-catalog-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    setBackupMessage('Sauvegarde téléchargée.');
+  };
+
+  const importCatalog = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    void file.text().then((contents) => {
+      const parsed: unknown = JSON.parse(contents);
+      if (!isCatalogBackup(parsed)) {
+        setBackupMessage('Fichier invalide : aucune donnée n’a été modifiée.');
+        return;
+      }
+      if (!confirm('Remplacer les catégories et les plats actuels par ceux de cette sauvegarde ?')) {
+        return;
+      }
+      setData({ categories: parsed.categories, items: parsed.items });
+      setBackupMessage('Catégories et plats restaurés.');
+    }).catch(() => {
+      setBackupMessage('Impossible de lire ce fichier JSON. Aucune donnée n’a été modifiée.');
+    });
+  };
 
   const addCategory = (name: string) => {
     if (categories.some((c) => c.toLowerCase() === name.toLowerCase())) return false;
@@ -359,6 +433,29 @@ export default function App() {
           <Plus size={18} aria-hidden="true" />
           Ajouter une catégorie
         </button>
+      </div>
+      <div className="catalog-backup">
+        <button type="button" className="catalog-backup-button" onClick={exportCatalog}>
+          <Download size={16} aria-hidden="true" />
+          Sauvegarder catégories et plats
+        </button>
+        <button
+          type="button"
+          className="catalog-backup-button"
+          onClick={() => backupInputRef.current?.click()}
+        >
+          <Upload size={16} aria-hidden="true" />
+          Restaurer depuis un fichier
+        </button>
+        <input
+          ref={backupInputRef}
+          type="file"
+          accept="application/json,.json"
+          className="catalog-backup-input"
+          aria-label="Choisir un fichier de sauvegarde JSON"
+          onChange={importCatalog}
+        />
+        {backupMessage && <p className="catalog-backup-message" role="status">{backupMessage}</p>}
       </div>
       <CategoryManagement
         categories={categories}

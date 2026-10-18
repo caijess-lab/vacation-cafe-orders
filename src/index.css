@@ -133,6 +133,44 @@ button {
   background: #11543f;
 }
 
+.catalog-backup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 16px;
+}
+
+.catalog-backup-button {
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid #dce7de;
+  border-radius: 10px;
+  background: #fff;
+  color: #286448;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.catalog-backup-button:hover {
+  background: #edf4ee;
+}
+
+.catalog-backup-input {
+  display: none;
+}
+
+.catalog-backup-message {
+  flex-basis: 100%;
+  margin: 0;
+  color: #526b5a;
+  font-size: 12px;
+}
+
 @media (max-width: 360px) {
   .page-heading {
     align-items: stretch;
