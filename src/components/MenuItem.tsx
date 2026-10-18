@@ -1,6 +1,7 @@
 import type { MenuItem } from '../types';
-import { CakeSlice, Coffee, Pizza, Soup, Utensils, Wine } from 'lucide-react';
+import { CakeSlice, Coffee, Pencil, Pizza, Soup, Trash2, Utensils, Wine } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import Button from './common/Button';
 
 interface Props {
   item: MenuItem;
@@ -61,29 +62,27 @@ export default function MenuItemRow({
         <div className="menu-item-actions">
           {!hideUtilities && (
             <div className="menu-item-utilities">
-              <button
-                type="button"
+              <Button
                 className="icon-button"
-                aria-label={`Modifier ${item.name}`}
+                ariaLabel={`Modifier ${item.name}`}
                 title="Modifier"
+                icon={Pencil}
+                iconSize={17}
                 onClick={() => {
                   const newName = prompt('Modifier le nom', item.name);
                   if (newName?.trim()) onUpdate(item.id, { name: newName.trim() });
                 }}
-              >
-                ✎
-              </button>
-              <button
-                type="button"
+              />
+              <Button
                 className="icon-button icon-button-danger"
-                aria-label={`Supprimer ${item.name}`}
+                ariaLabel={`Supprimer ${item.name}`}
                 title="Supprimer"
+                icon={Trash2}
+                iconSize={17}
                 onClick={() => {
                   if (confirm(`Supprimer « ${item.name} » ?`)) onDelete(item.id);
                 }}
-              >
-                ×
-              </button>
+              />
             </div>
           )}
         </div>
@@ -91,28 +90,24 @@ export default function MenuItemRow({
 
       {!managementOnly && orderSummary && (
         <div className="readiness-actions">
-          <button
-            type="button"
+          <Button
             className={`done-button${orderSummary.quantity > 0 && orderSummary.readyQuantity === orderSummary.quantity ? ' is-done' : ''}`}
             disabled={orderSummary.quantity === orderSummary.readyQuantity}
-            aria-label={`Marquer une portion de ${item.name} comme prête`}
-            onClick={() => onMarkReady?.(item.id)}
-          >
-            {orderSummary.quantity === 0
+            ariaLabel={`Marquer une portion de ${item.name} comme prête`}
+            label={orderSummary.quantity === 0
               ? 'Aucune commande'
               : orderSummary.readyQuantity === orderSummary.quantity
                 ? 'Tout prêt ✓'
                 : 'Marquer 1 prêt'}
-          </button>
+            onClick={() => onMarkReady?.(item.id)}
+          />
           {orderSummary.readyQuantity > 0 && (
-            <button
-              type="button"
+            <Button
               className="undo-ready-button"
-              aria-label={`Annuler une portion prête de ${item.name}`}
+              ariaLabel={`Annuler une portion prête de ${item.name}`}
+              label="Annuler 1 prêt"
               onClick={() => onUndoReady?.(item.id)}
-            >
-              Annuler 1 prêt
-            </button>
+            />
           )}
         </div>
       )}

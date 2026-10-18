@@ -1,6 +1,7 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import type { MenuItem, TableOrderItem } from '../types';
+import Button from './common/Button';
 
 interface Props {
   table: string;
@@ -90,22 +91,22 @@ export default function TableOrderForm({
                       <li className="table-order-editor-item" key={menuItem.id}>
                         <span>{menuItem.name}</span>
                         <div className="quantity-control" aria-label={`Quantité de ${menuItem.name} : ${quantity}`}>
-                          <button
-                            type="button"
-                            aria-label={`Retirer une ${menuItem.name}`}
+                          <Button
+                            className="quantity-control-button"
+                            icon={Minus}
+                            iconSize={15}
+                            ariaLabel={`Retirer une ${menuItem.name}`}
                             disabled={quantity === 0}
                             onClick={() => updateQuantity(menuItem, -1)}
-                          >
-                            <Minus size={15} aria-hidden="true" />
-                          </button>
+                          />
                           <span>{quantity}</span>
-                          <button
-                            type="button"
-                            aria-label={`Ajouter une ${menuItem.name}`}
+                          <Button
+                            className="quantity-control-button"
+                            icon={Plus}
+                            iconSize={15}
+                            ariaLabel={`Ajouter une ${menuItem.name}`}
                             onClick={() => updateQuantity(menuItem, 1)}
-                          >
-                            <Plus size={15} aria-hidden="true" />
-                          </button>
+                          />
                         </div>
                       </li>
                     );
@@ -120,20 +121,22 @@ export default function TableOrderForm({
         </div>
 
         <div className="category-modal-actions">
-          <button
-            type="button"
+          <Button
             className="table-order-clear"
+            label="Tout effacer"
             disabled={total === 0}
             onClick={clearOrder}
-          >
-            Tout effacer
-          </button>
-          <button type="button" className="category-modal-cancel" onClick={onCancel}>
-            Annuler
-          </button>
-          <button type="button" className="category-modal-save" onClick={() => onSave(orderItems)}>
-            Enregistrer la commande
-          </button>
+          />
+          <Button
+            className="category-modal-cancel"
+            label="Annuler"
+            onClick={onCancel}
+          />
+          <Button
+            className="category-modal-save"
+            label="Enregistrer la commande"
+            onClick={() => onSave(orderItems)}
+          />
         </div>
       </section>
     </div>

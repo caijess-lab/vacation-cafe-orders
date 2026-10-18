@@ -1,5 +1,7 @@
 import type { MenuItem } from '../types';
+import { Pencil, Plus, X } from 'lucide-react';
 import MenuItemRow from './MenuItem';
+import Button from './common/Button';
 
 interface Props {
   name: string;
@@ -64,41 +66,38 @@ export default function CategorySection({
         </div>
         {onAddItem ? (
           <div className="category-heading-actions">
-            <button
-              type="button"
+            <Button
               className="icon-button category-add-item-button"
-              aria-label={`Ajouter un plat à ${name}`}
+              ariaLabel={`Ajouter un plat à ${name}`}
               title={`Ajouter un plat à ${name}`}
+              icon={Plus}
+              iconSize={17}
               onClick={() => onAddItem(name)}
-            >
-              +
-            </button>
+            />
           </div>
         ) : !managementOnly && !hideCategoryUtilities ? (
           <div className="category-heading-actions">
-            <button
-              type="button"
+            <Button
               className="icon-button"
-              aria-label={`Renommer ${name}`}
+              ariaLabel={`Renommer ${name}`}
               title="Renommer la catégorie"
+              icon={Pencil}
+              iconSize={17}
               onClick={() => {
                 const newName = prompt('Renommer la catégorie', name);
                 if (newName?.trim()) onRename(name, newName.trim());
               }}
-            >
-              ✎
-            </button>
-            <button
-              type="button"
+            />
+            <Button
               className="icon-button icon-button-danger"
-              aria-label={`Supprimer ${name}`}
+              ariaLabel={`Supprimer ${name}`}
               title="Supprimer la catégorie"
+              icon={X}
+              iconSize={17}
               onClick={() => {
                 if (confirm(`Supprimer « ${name} » et ses articles ?`)) onDelete(name);
               }}
-            >
-              ×
-            </button>
+            />
           </div>
         ) : null}
       </div>

@@ -1,4 +1,5 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
+import Button from './common/Button';
 
 interface Props {
   initialName?: string;
@@ -62,12 +63,16 @@ export default function TableForm({ initialName = '', onSave, onCancel }: Props)
           />
           {error && <p className="category-modal-error" role="alert">{error}</p>}
           <div className="category-modal-actions">
-            <button type="button" className="category-modal-cancel" onClick={onCancel}>
-              Annuler
-            </button>
-            <button type="submit" className="category-modal-save">
-              Enregistrer
-            </button>
+            <Button
+              className="category-modal-cancel"
+              label="Annuler"
+              onClick={onCancel}
+            />
+            <Button
+              type="submit"
+              className="category-modal-save"
+              label="Enregistrer"
+            />
           </div>
         </form>
       </section>

@@ -7,6 +7,7 @@ import { useLocalStorage } from './hooks/useLocaleStorage';
 import Header from './components/Header';
 import AddCategoryForm from './components/AddCategoryForm';
 import AddItemForm from './components/AddItemForm';
+import Button from './components/common/Button';
 import TableForm from './components/TableForm';
 import TableOrderForm from './components/TableOrderForm';
 import CategorySection from './components/CategorySection';
@@ -194,6 +195,18 @@ export default function App() {
   const resetOrder = () => {
     if (restaurant.orders.length > 0 && confirm('Effacer toutes les commandes des tables ?')) {
       setRestaurant((prev) => ({ ...prev, orders: [] }));
+    }
+  };
+
+  const resetTableOrder = (table: string) => {
+    if (
+      restaurant.orders.some((order) => order.table === table) &&
+      confirm(`Effacer la commande de ${table} ?`)
+    ) {
+      setRestaurant((prev) => ({
+        ...prev,
+        orders: prev.orders.filter((order) => order.table !== table),
+      }));
     }
   };
 
@@ -465,6 +478,15 @@ export default function App() {
                   >
                     <Pencil size={17} aria-hidden="true" />
                   </button>
+                  <Button
+                    className="category-management-action"
+                    ariaLabel={`Réinitialiser la commande de ${table}`}
+                    title="Réinitialiser la commande"
+                    disabled={!order}
+                    icon={RotateCcw}
+                    iconSize={17}
+                    onClick={() => resetTableOrder(table)}
+                  />
                   <button
                     type="button"
                     className="category-management-action category-management-delete"

@@ -1,19 +1,54 @@
-import type { LucideIcon } from "lucide-react";
+import type { PointerEvent as ReactPointerEvent } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
 interface ButtonProps {
-  onClick: () => void;
+  onClick?: () => void;
   label?: string;
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  disabled?: boolean;
+  ariaLabel?: string;
+  title?: string;
+  className?: string;
+  type?: 'button' | 'submit';
+  ariaCurrent?: 'page';
+  onPointerDown?: (event: ReactPointerEvent<HTMLButtonElement>) => void;
+  iconSize?: number;
+  iconStrokeWidth?: number;
 }
 
-export default function Button({ onClick, label, icon: Icon }: ButtonProps) {
+export default function Button({
+  onClick,
+  label,
+  icon: Icon,
+  disabled = false,
+  ariaLabel,
+  title,
+  className = '',
+  type = 'button',
+  ariaCurrent,
+  onPointerDown,
+  iconSize,
+  iconStrokeWidth,
+}: ButtonProps) {
   return (
     <button
+      type={type}
       onClick={onClick}
-      className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-white px-4 text-sm font-semibold text-emerald-900 shadow-sm transition-all active:scale-95"
+      onPointerDown={onPointerDown}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      title={title}
+      aria-current={ariaCurrent}
+      className={className}
     >
-      <Icon className="h-4 w-4 stroke-[2.5]" />
-      {label ? <span>{label}</span> : null}
+      {Icon && (
+        <Icon
+          aria-hidden="true"
+          size={iconSize}
+          strokeWidth={iconStrokeWidth}
+        />
+      )}
+      {label && <span>{label}</span>}
     </button>
   );
 }

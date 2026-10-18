@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import { Check, GripVertical, Pencil, Trash2, X } from 'lucide-react';
+import Button from './common/Button';
 
 interface Props {
   categories: string[];
@@ -59,15 +60,15 @@ export default function CategoryManagement({
             data-category-name={category}
             style={offset !== 0 ? { transform: `translateY(${offset}px)` } : undefined}
           >
-            <button
+            <Button
               type="button"
               className="category-management-drag"
-              aria-label={`Déplacer la catégorie ${category}`}
+              ariaLabel={`Déplacer la catégorie ${category}`}
               title="Glisser pour réorganiser"
+              icon={GripVertical}
+              iconSize={19}
               onPointerDown={(event) => onDragStart(event, category)}
-            >
-              <GripVertical size={19} aria-hidden="true" />
-            </button>
+            />
 
             {isEditing ? (
               <form className="category-management-edit" onSubmit={(event) => saveEdit(event, category)}>
@@ -83,47 +84,44 @@ export default function CategoryManagement({
                   />
                   {error && <span className="category-management-error" role="alert">{error}</span>}
                 </div>
-                <button
+                <Button
                   type="submit"
                   className="category-management-action category-management-save"
-                  aria-label={`Enregistrer ${category}`}
+                  ariaLabel={`Enregistrer ${category}`}
                   title="Enregistrer"
-                >
-                  <Check size={18} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
+                  icon={Check}
+                  iconSize={18}
+                />
+                <Button
                   className="category-management-action"
-                  aria-label="Annuler la modification"
+                  ariaLabel="Annuler la modification"
                   title="Annuler"
+                  icon={X}
+                  iconSize={18}
                   onClick={() => setEditingCategory(null)}
-                >
-                  <X size={18} aria-hidden="true" />
-                </button>
+                />
               </form>
             ) : (
               <>
                 <span className="category-management-name">{category}</span>
-                <button
-                  type="button"
+                <Button
                   className="category-management-action"
-                  aria-label={`Modifier ${category}`}
+                  ariaLabel={`Modifier ${category}`}
                   title="Modifier la catégorie"
+                  icon={Pencil}
+                  iconSize={17}
                   onClick={() => beginEdit(category)}
-                >
-                  <Pencil size={17} aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
+                />
+                <Button
                   className="category-management-action category-management-delete"
-                  aria-label={`Supprimer ${category}`}
+                  ariaLabel={`Supprimer ${category}`}
                   title="Supprimer la catégorie"
+                  icon={Trash2}
+                  iconSize={17}
                   onClick={() => {
                     if (confirm(`Supprimer « ${category} » et ses articles ?`)) onDelete(category);
                   }}
-                >
-                  <Trash2 size={17} aria-hidden="true" />
-                </button>
+                />
               </>
             )}
           </div>
