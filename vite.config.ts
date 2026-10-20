@@ -3,8 +3,20 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
+import packageJson from './package.json' with { type: 'json' };
+
+const buildVersion = process.env.BUILD_ID
+  ? `${packageJson.version}+netlify.${process.env.BUILD_ID}`
+  : process.env.DEPLOY_ID
+    ? `${packageJson.version}+deploy.${process.env.DEPLOY_ID}`
+    : process.env.COMMIT_REF
+      ? `${packageJson.version}+commit.${process.env.COMMIT_REF.slice(0, 7)}`
+      : `${packageJson.version}+local`;
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(buildVersion),
+  },
   plugins: [
     react(),
     VitePWA({

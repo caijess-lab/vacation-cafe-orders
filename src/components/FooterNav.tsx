@@ -1,8 +1,8 @@
-import { House, Table2, Tags, Utensils } from 'lucide-react';
+import { House, Settings, Table2, Tags, Utensils } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Button from './common/Button';
 
-type PageKey = 'home' | 'categories' | 'dishes' | 'tables';
+type PageKey = 'home' | 'categories' | 'dishes' | 'tables' | 'settings';
 
 interface FooterNavProps {
   activePage: PageKey;
@@ -14,6 +14,7 @@ const navItems: Array<{ key: PageKey; label: string; icon: LucideIcon }> = [
   { key: 'tables', label: 'Tables', icon: Table2 },
   { key: 'categories', label: 'Catégories', icon: Tags },
   { key: 'dishes', label: 'Plats', icon: Utensils },
+  { key: 'settings', label: 'Gestion', icon: Settings },
 ];
 
 export default function FooterNav({ activePage, onChangePage }: FooterNavProps) {
@@ -37,6 +38,9 @@ export default function FooterNav({ activePage, onChangePage }: FooterNavProps) 
           />
         ))}
       </div>
+      <p className="pb-1 text-center text-[9px] leading-none text-emerald-100/70">
+        v{__APP_VERSION__}
+      </p>
     </nav>
   );
 }

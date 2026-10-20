@@ -14,45 +14,63 @@ import CategorySection from './components/CategorySection';
 import CategoryManagement from './components/CategoryManagement';
 import FooterNav from './components/FooterNav';
 
-type PageKey = 'home' | 'categories' | 'dishes' | 'tables';
+type PageKey = 'home' | 'categories' | 'dishes' | 'tables' | 'settings';
 
-interface CatalogBackup {
-  version: 1;
-  categories: string[];
-  items: MenuItem[];
-}
+type CatalogBackup =
+  | { version: 1; categories: string[]; items: MenuItem[] }
+  | { version: 2; categories: string[]; items: MenuItem[]; tables: string[] };
 
 function isCatalogBackup(value: unknown): value is CatalogBackup {
   if (typeof value !== 'object' || value === null) return false;
-  const backup = value as Partial<CatalogBackup>;
+  const backup = value as Record<string, unknown>;
   if (
-    backup.version !== 1 ||
+    (backup.version !== 1 && backup.version !== 2) ||
     !Array.isArray(backup.categories) ||
     !Array.isArray(backup.items) ||
-    !backup.categories.every((category) => typeof category === 'string' && category.trim() !== '')
+    !backup.categories.every((category: unknown) => (
+      typeof category === 'string' && category.trim() !== ''
+    ))
   ) {
     return false;
   }
 
-  const categoryNames = new Set(backup.categories.map((category) => category.toLowerCase()));
+  const categoryNames = new Set(
+    (backup.categories as string[]).map((category) => category.toLowerCase()),
+  );
   const itemIds = new Set<string>();
-  return backup.items.every((item) => {
+  const hasValidItems = (backup.items as unknown[]).every((item) => {
     if (
       typeof item !== 'object' ||
-      item === null ||
-      typeof item.id !== 'string' ||
-      item.id.trim() === '' ||
-      typeof item.name !== 'string' ||
-      item.name.trim() === '' ||
-      typeof item.category !== 'string' ||
-      !categoryNames.has(item.category.toLowerCase()) ||
-      itemIds.has(item.id)
+      item === null
     ) {
       return false;
     }
-    itemIds.add(item.id);
+    const menuItem = item as Partial<MenuItem>;
+    if (
+      typeof menuItem.id !== 'string' ||
+      menuItem.id.trim() === '' ||
+      typeof menuItem.name !== 'string' ||
+      menuItem.name.trim() === '' ||
+      typeof menuItem.category !== 'string' ||
+      !categoryNames.has(menuItem.category.toLowerCase()) ||
+      itemIds.has(menuItem.id)
+    ) {
+      return false;
+    }
+    itemIds.add(menuItem.id);
     return true;
   });
+  if (!hasValidItems) return false;
+  if (backup.version === 1) return true;
+  if (
+    !Array.isArray(backup.tables) ||
+    !backup.tables.every((table: unknown) => typeof table === 'string' && table.trim() !== '')
+  ) {
+    return false;
+  }
+
+  const tableNames = (backup.tables as string[]).map((table) => table.toLowerCase());
+  return new Set(tableNames).size === tableNames.length;
 }
 
 export default function App() {
@@ -101,7 +119,7 @@ export default function App() {
   );
 
   const exportCatalog = () => {
-    const backup: CatalogBackup = { version: 1, categories, items };
+    const backup: CatalogBackup = { version: 2, categories, items, tables: restaurant.tables };
     const file = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(file);
     const link = document.createElement('a');
@@ -123,11 +141,23 @@ export default function App() {
         setBackupMessage('Fichier invalide : aucune donnée n’a été modifiée.');
         return;
       }
-      if (!confirm('Remplacer les catégories et les plats actuels par ceux de cette sauvegarde ?')) {
+      const confirmMessage = parsed.version === 2
+        ? 'Remplacer les catégories, les plats et les tables actuels par ceux de cette sauvegarde ? Les commandes des tables absentes seront supprimées.'
+        : 'Remplacer les catégories et les plats actuels par ceux de cette sauvegarde ?';
+      if (!confirm(confirmMessage)) {
         return;
       }
       setData({ categories: parsed.categories, items: parsed.items });
-      setBackupMessage('Catégories et plats restaurés.');
+      if (parsed.version === 2) {
+        setRestaurant((prev) => ({
+          ...prev,
+          tables: parsed.tables,
+          orders: prev.orders.filter((order) => parsed.tables.includes(order.table)),
+        }));
+        setBackupMessage('Catégories, plats et tables restaurés.');
+      } else {
+        setBackupMessage('Catégories et plats restaurés.');
+      }
     }).catch(() => {
       setBackupMessage('Impossible de lire ce fichier JSON. Aucune donnée n’a été modifiée.');
     });
@@ -434,29 +464,6 @@ export default function App() {
           Ajouter une catégorie
         </button>
       </div>
-      <div className="catalog-backup">
-        <button type="button" className="catalog-backup-button" onClick={exportCatalog}>
-          <Download size={16} aria-hidden="true" />
-          Sauvegarder catégories et plats
-        </button>
-        <button
-          type="button"
-          className="catalog-backup-button"
-          onClick={() => backupInputRef.current?.click()}
-        >
-          <Upload size={16} aria-hidden="true" />
-          Restaurer depuis un fichier
-        </button>
-        <input
-          ref={backupInputRef}
-          type="file"
-          accept="application/json,.json"
-          className="catalog-backup-input"
-          aria-label="Choisir un fichier de sauvegarde JSON"
-          onChange={importCatalog}
-        />
-        {backupMessage && <p className="catalog-backup-message" role="status">{backupMessage}</p>}
-      </div>
       <CategoryManagement
         categories={categories}
         onRename={renameCategory}
@@ -470,6 +477,41 @@ export default function App() {
           onCancel={() => setIsCategoryFormOpen(false)}
         />
       )}
+    </>
+  );
+
+  const renderSettingsPage = () => (
+    <>
+      <div className="page-heading">
+        <h2>Gestion</h2>
+      </div>
+      <section className="settings-section" aria-labelledby="settings-backup-title">
+        <h3 id="settings-backup-title">Sauvegarde et restauration</h3>
+        <p>Exportez vos catégories, plats et tables ou restaurez-les depuis une sauvegarde.</p>
+        <div className="catalog-backup">
+          <button type="button" className="catalog-backup-button" onClick={exportCatalog}>
+            <Download size={16} aria-hidden="true" />
+            Sauvegarder catégories, plats et tables
+          </button>
+          <button
+            type="button"
+            className="catalog-backup-button"
+            onClick={() => backupInputRef.current?.click()}
+          >
+            <Upload size={16} aria-hidden="true" />
+            Restaurer depuis un fichier
+          </button>
+          <input
+            ref={backupInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="catalog-backup-input"
+            aria-label="Choisir un fichier de sauvegarde JSON"
+            onChange={importCatalog}
+          />
+          {backupMessage && <p className="catalog-backup-message" role="status">{backupMessage}</p>}
+        </div>
+      </section>
     </>
   );
 
@@ -697,6 +739,7 @@ export default function App() {
         {activePage === 'categories' && renderCategoriesPage()}
         {activePage === 'dishes' && renderDishesPage()}
         {activePage === 'tables' && renderTablesPage()}
+        {activePage === 'settings' && renderSettingsPage()}
       </main>
 
       <FooterNav activePage={activePage} onChangePage={changePage} />
